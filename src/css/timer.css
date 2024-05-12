@@ -33,11 +33,11 @@ input {
   border-radius: 8px;
   background: #4e75ff;
 }
-.btn-start:disabled {
-  background-color: #989898;
-}
 .btn-start:hover {
   background: #6c8cff;
+}
+.btn-start:disabled {
+  background: #989898;
 }
 .flatpickr-input {
   font-size: 20px;

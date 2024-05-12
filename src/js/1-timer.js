@@ -12,7 +12,8 @@ const hoursValue = document.querySelector(`span[data-hours]`);
 const minutesValue = document.querySelector(`span[data-minutes]`);
 const secondsValue = document.querySelector(`span[data-seconds]`);
 
-buttonStart.setAttribute('disabled', 'disabled');
+// Початково вимикаємо кнопку "Старт"
+buttonStart.dataset.start = 'disabled';
 
 let timerId = null;
 let chosenDate = null;
@@ -26,34 +27,48 @@ const options = {
 };
 
 flatpickr(inputDate, options);
-
 function onClose(selectedDates) {
   chosenDate = selectedDates[0];
 
-  if (chosenDate < Date.now()) {
+  if (!chosenDate || chosenDate < Date.now()) {
+    // Вимикаємо кнопку "Старт", якщо дата не обрана або обрана в минулому
+    buttonStart.dataset.start = 'disabled';
     iziToast.error({
       title: 'Error',
       message: 'Please choose a date in the future',
     });
   } else {
-    buttonStart.removeAttribute('disabled');
+    // Увімкнення кнопки "Старт", якщо обрана дата в майбутньому
+    buttonStart.dataset.start = 'enabled';
   }
 }
 
 buttonStart.addEventListener(`click`, onClick);
 
 function onClick() {
-  timerId = setInterval(() => {
-    buttonStart.setAttribute('disabled', 'disabled');
-    inputDate.setAttribute('disabled', 'disabled');
+  // Перевіряємо, чи обрана дата, перед тим як запускати таймер
+  if (!chosenDate) {
+    return;
+  }
 
+  // Перевіряємо атрибут data-start, щоб визначити, чи має бути увімкнено кнопку "Старт"
+  if (buttonStart.dataset.start === 'disabled') {
+    return;
+  }
+
+  // Вимикаємо кнопку "Старт" і вимикаємо поле вводу після натискання кнопки "Старт"
+  buttonStart.dataset.start = 'disabled';
+  inputDate.disabled = true;
+
+  timerId = setInterval(() => {
     const currentTime = Date.now();
     const differenceTime = chosenDate - currentTime;
-    console.log(differenceTime, chosenDate, currentTime);
 
-    if (differenceTime < 1000) {
+    if (differenceTime <= 0) {
       clearInterval(timerId);
-      inputDate.removeAttribute('disabled');
+      inputDate.disabled = false;
+      iziToast.success('Timer expired');
+      return;
     }
 
     const { days, hours, minutes, seconds } = convertMs(differenceTime);
@@ -62,10 +77,10 @@ function onClick() {
 }
 
 function formatTimer({ days, hours, minutes, seconds }) {
-  daysValue.textContent = days;
-  hoursValue.textContent = hours;
-  minutesValue.textContent = minutes;
-  secondsValue.textContent = seconds;
+  daysValue.textContent = pad(days);
+  hoursValue.textContent = pad(hours);
+  minutesValue.textContent = pad(minutes);
+  secondsValue.textContent = pad(seconds);
 }
 
 function convertMs(ms) {
